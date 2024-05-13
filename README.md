@@ -4,10 +4,14 @@ A simple bash script that installs OpenVAS from sources on Debian 12.
 
 # Usage
 
-### ⚙ Step #1: Login as root.
+### ⚙ Step #1: Login as root and update the system.
 
 ```
 sudo su
+```
+
+```
+sudo apt update & sudo apt upgrade
 ```
 
 ### ⚙ Step #2: Download the script and make it executable.
