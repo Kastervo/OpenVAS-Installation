@@ -13,6 +13,7 @@ fi
 # Install Required Packages
 
 apt install --no-install-recommends --assume-yes build-essential curl cmake pkg-config gnupg
+apt install -y libcjson-dev libcurl4-openssl-dev
 apt install -y libglib2.0-dev libgpgme-dev libgnutls28-dev uuid-dev libssh-gcrypt-dev libhiredis-dev libxml2-dev libpcap-dev libnet1-dev libpaho-mqtt-dev
 apt install -y libldap2-dev libradcli-dev libpq-dev postgresql-server-dev-15 libical-dev xsltproc rsync libbsd-dev
 apt install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended xmlstarlet zip rpm fakeroot dpkg nsis gpgsm wget sshpass openssh-client socat snmp python3 smbclient python3-lxml gnutls-bin xml-twig-tools
@@ -27,15 +28,15 @@ export PATH=$PATH:$INSTALL_PREFIX/sbin
 export SOURCE_DIR=$HOME/source
 export BUILD_DIR=$HOME/build
 export INSTALL_DIR=$HOME/install
-export GVM_LIBS_VERSION=22.8.0
-export GVMD_VERSION=23.2.0
-export PG_GVM_VERSION=22.6.4
-export GSA_VERSION=23.0.0
-export GSAD_VERSION=22.9.0
+export GVM_LIBS_VERSION=22.10.0
+export GVMD_VERSION=23.8.1
+export PG_GVM_VERSION=22.6.5
+export GSA_VERSION=23.2.1
+export GSAD_VERSION=22.11.0
 export OPENVAS_SMB_VERSION=22.5.3
-export OPENVAS_SCANNER_VERSION=22.7.9
-export OSPD_OPENVAS_VERSION=22.6.2
-export NOTUS_VERSION=22.6.2
+export OPENVAS_SCANNER_VERSION=23.8.2
+export OSPD_OPENVAS_VERSION=22.7.1
+export NOTUS_VERSION=22.6.3
 export GNUPGHOME=/tmp/openvas-gnupg
 export OPENVAS_GNUPG_HOME=/etc/openvas/gnupg
 
@@ -319,6 +320,23 @@ echo "8AE4BE429B60A59B311C2E739823FAA60ED1E580:6:" | gpg --import-ownertrust
 mkdir -p $OPENVAS_GNUPG_HOME
 cp -r /tmp/openvas-gnupg/* $OPENVAS_GNUPG_HOME/
 chown -R gvm:gvm $OPENVAS_GNUPG_HOME
+
+# Setting up sudo for Scanning
+
+if grep -Fxq "%gvm ALL = NOPASSWD: /usr/local/sbin/openvas" /etc/sudoers
+then
+echo "Users of the gvm group are already configured to run the openvas-scanner application as root user via sudo."
+else
+
+cat >> /etc/sudoers <<EOF
+
+# allow users of the gvm group run openvas
+%gvm ALL = NOPASSWD: /usr/local/sbin/openvas
+EOF
+
+echo "Configured users of the gvm group to run the openvas-scanner application as root user via sudo."
+
+fi
 
 # Setting up PostgreSQL
 
