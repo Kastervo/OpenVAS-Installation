@@ -33,6 +33,10 @@ wget https://raw.githubusercontent.com/Kastervo/OpenVAS-Installation/master/open
 ```
 ./openvas_install.sh
 ```
+#### Flags
+```
+-S 	# Enable HTTPs on the greenbone webpage
+```
 
 ### ⚙ Step #4: The admin password.
 
