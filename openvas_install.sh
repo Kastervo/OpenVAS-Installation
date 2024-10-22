@@ -288,6 +288,14 @@ systemctl start mosquitto.service
 systemctl enable mosquitto.service
 echo -e "mqtt_server_uri = localhost:1883\ntable_driven_lsc = yes" | tee -a /etc/openvas/openvas.conf
 
+if [[ "$@" == *"-S"* ]]; then
+    # Setting up certs for SSL
+    mkdir -p /etc/gvm
+    openssl req -x509 -newkey rsa:4096 -keyout /etc/gvm/serverkey.pem -out /etc/gvm/servercert.pem -nodes -days 397
+    chown -R root:root /etc/gvm
+    chmod 600 /etc/gvm/serverkey.pem
+    chmod 644 /etc/gvm/servercert.pem
+fi
 # Adjusting Permissions
 
 mkdir -p /var/lib/gvm
@@ -439,30 +447,54 @@ WantedBy=multi-user.target
 EOF
 
 cp -v $BUILD_DIR/gvmd.service /etc/systemd/system/
+if [[ "$@" == *"-S"* ]]; then
+    cat << EOF > $BUILD_DIR/gsad.service
+    [Unit]
+    Description=Greenbone Security Assistant daemon (gsad)
+    Documentation=man:gsad(8) https://www.greenbone.net
+    After=network.target gvmd.service
+    Wants=gvmd.service
 
-cat << EOF > $BUILD_DIR/gsad.service
-[Unit]
-Description=Greenbone Security Assistant daemon (gsad)
-Documentation=man:gsad(8) https://www.greenbone.net
-After=network.target gvmd.service
-Wants=gvmd.service
+    [Service]
+    Type=exec
+    ####User=gvm
+    ####Group=gvm
+    RuntimeDirectory=gsad
+    RuntimeDirectoryMode=2775
+    PIDFile=/run/gsad/gsad.pid
+    #ExecStart=/usr/local/sbin/gsad --foreground --listen=0.0.0.0 --port=9392 --http-only
+    ExecStart=/usr/local/sbin/gsad --listen=0.0.0.0 --drop-privleges=gvm --port=443 --rport=80 -k /etc/gvm/serverkey.pem -c /etc/gvm/servercert.pem
+    Restart=always
+    TimeoutStopSec=10
 
-[Service]
-Type=exec
-User=gvm
-Group=gvm
-RuntimeDirectory=gsad
-RuntimeDirectoryMode=2775
-PIDFile=/run/gsad/gsad.pid
-ExecStart=/usr/local/sbin/gsad --foreground --listen=0.0.0.0 --port=9392 --http-only
-Restart=always
-TimeoutStopSec=10
+    [Install]
+    WantedBy=multi-user.target
+    Alias=greenbone-security-assistant.service
+    EOF
+else
+    cat << EOF > $BUILD_DIR/gsad.service
+    [Unit]
+    Description=Greenbone Security Assistant daemon (gsad)
+    Documentation=man:gsad(8) https://www.greenbone.net
+    After=network.target gvmd.service
+    Wants=gvmd.service
 
-[Install]
-WantedBy=multi-user.target
-Alias=greenbone-security-assistant.service
-EOF
+    [Service]
+    Type=exec
+    User=gvm
+    Group=gvm
+    RuntimeDirectory=gsad
+    RuntimeDirectoryMode=2775
+    PIDFile=/run/gsad/gsad.pid
+    ExecStart=/usr/local/sbin/gsad --foreground --listen=0.0.0.0 --port=9392 --http-only
+    Restart=always
+    TimeoutStopSec=10
 
+    [Install]
+    WantedBy=multi-user.target
+    Alias=greenbone-security-assistant.service
+    EOF
+fi
 cp -v $BUILD_DIR/gsad.service /etc/systemd/system/
 
 systemctl daemon-reload
