@@ -10,6 +10,22 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
+# Initialize the flag variable
+SSL_MODE=false
+
+# Parse options
+while getopts ":S" opt; do
+    case $opt in
+        S)
+            SSL_MODE=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
+done
+
 # Install Required Packages
 
 apt install --no-install-recommends --assume-yes build-essential curl cmake pkg-config gnupg
@@ -288,7 +304,8 @@ systemctl start mosquitto.service
 systemctl enable mosquitto.service
 echo -e "mqtt_server_uri = localhost:1883\ntable_driven_lsc = yes" | tee -a /etc/openvas/openvas.conf
 
-if [[ "$@" == *"-S"* ]]; then
+# If the -S flag was set, create ssl cert for web
+if $SSL_MODE; then
     # Setting up certs for SSL
     mkdir -p /etc/gvm
     openssl req -x509 -newkey rsa:4096 -keyout /etc/gvm/serverkey.pem -out /etc/gvm/servercert.pem -nodes -days 397
@@ -447,7 +464,7 @@ WantedBy=multi-user.target
 EOF
 
 cp -v $BUILD_DIR/gvmd.service /etc/systemd/system/
-if [[ "$@" == *"-S"* ]]; then
+if $SSL_MODE; then
     cat << EOF > $BUILD_DIR/gsad.service
     [Unit]
     Description=Greenbone Security Assistant daemon (gsad)
