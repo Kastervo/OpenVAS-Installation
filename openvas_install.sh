@@ -463,7 +463,7 @@ if [[ "$@" == *"-S"* ]]; then
     RuntimeDirectoryMode=2775
     PIDFile=/run/gsad/gsad.pid
     #ExecStart=/usr/local/sbin/gsad --foreground --listen=0.0.0.0 --port=9392 --http-only
-    ExecStart=/usr/local/sbin/gsad --listen=0.0.0.0 --drop-privleges=gvm --port=443 --rport=80 -k /etc/gvm/serverkey.pem -c /etc/gvm/servercert.pem
+    ExecStart=/usr/local/sbin/gsad --listen=0.0.0.0 --drop-privileges=gvm --port=443 --rport=80 -k /etc/gvm/serverkey.pem -c /etc/gvm/servercert.pem
     Restart=always
     TimeoutStopSec=10
 
