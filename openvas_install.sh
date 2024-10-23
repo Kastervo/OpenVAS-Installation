@@ -58,7 +58,7 @@ export OPENVAS_GNUPG_HOME=/etc/openvas/gnupg
 
 # Create user
 
-getent passwd gvm > /dev/null 2&>1
+getent passwd gvm > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
     echo "GVM User already exists."
