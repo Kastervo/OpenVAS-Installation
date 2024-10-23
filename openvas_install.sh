@@ -470,7 +470,8 @@ if [[ "$@" == *"-S"* ]]; then
     [Install]
     WantedBy=multi-user.target
     Alias=greenbone-security-assistant.service
-    EOF
+
+EOF
 else
     cat << EOF > $BUILD_DIR/gsad.service
     [Unit]
@@ -493,7 +494,8 @@ else
     [Install]
     WantedBy=multi-user.target
     Alias=greenbone-security-assistant.service
-    EOF
+    
+EOF
 fi
 cp -v $BUILD_DIR/gsad.service /etc/systemd/system/
 
